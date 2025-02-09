@@ -1,8 +1,10 @@
 name: Build,Analyze,scan
+
 on:
   push:
     branches:
       - main
+
 jobs:
   build-analyze-scan:
     name: Build
@@ -11,17 +13,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0  # Shallow clones should be disabled for better relevancy of analysis
+
       - name: Build and analyze with SonarQube
         uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      # Install npm and Trivy in a single step
+      - name: Install npm and Trivy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y npm
+          curl -sfL https://github.com/aquasecurity/trivy/releases/download/v0.22.0/trivy_0.22.0_Linux-64bit.deb -o trivy.deb
+          sudo dpkg -i trivy.deb
+
       - name: npm install dependency
         run: npm install
 
       - name: Trivy file scan
         run: trivy fs . > trivyfs.txt
-
-        
-        
